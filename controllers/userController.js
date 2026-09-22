@@ -103,9 +103,67 @@ res.status(200).json({
 };
 
 
+const updateProfile = async(req,res)=>{
+    // console.log(req.body)
+    // console.log(req.user)
+    const { name, bio, avatar, skillsToTeach, skillsToLearn } = req.body
+
+    if (name !== undefined && name.trim() === "") {
+    return res.status(400).json({
+        success: false,
+        message: "Name cannot be empty"
+    });
+}
+
+    if (skillsToTeach !== undefined && !Array.isArray(skillsToTeach)) {
+    return res.status(400).json({
+        success: false,
+        message: "skillsToTeach must be an array"
+    });
+}
+
+if (skillsToLearn !== undefined && !Array.isArray(skillsToLearn)) {
+    return res.status(400).json({
+        success: false,
+        message: "skillsToLearn must be an array"
+    });
+}
+
+    const updatedUser = await User.findByIdAndUpdate(req.user.userId,
+        {
+            $set:{
+                name,
+                bio,
+                avatar,
+                skillsToTeach, 
+                skillsToLearn 
+
+            }
+        }, { returnDocument: "after" }
+    )
+
+    if (!updatedUser) {
+    return res.status(404).json({
+        success: false,
+        message: "User not found"
+    });
+}
+
+    updatedUser.password = undefined;
+
+    res.status(200).json({
+    success: true,
+    message: "Profile updated successfully",
+    user: updatedUser
+});
+
+}
+
+
 
 module.exports = {
     createUser,
     loginUser,
-    getCurrentUser
+    getCurrentUser,
+    updateProfile
 };

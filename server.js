@@ -3,6 +3,7 @@ const express = require("express");
 const connectDB = require("./config/db");
 const userRoutes = require("./routes/userRoutes");
 const resourceRoutes = require("./routes/resourceRoutes");
+const connectionRoutes = require("./routes/connectionRoutes");
 
 const app = express();
 
@@ -10,6 +11,7 @@ app.use(express.json())
 
 app.use("/api/users", userRoutes);
 app.use("/api/resources", resourceRoutes);
+app.use("/api/connections", connectionRoutes);
 
 app.get("/", (req, res) => {
     res.send("SkillSwap API is running");

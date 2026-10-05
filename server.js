@@ -1,4 +1,5 @@
 require("dotenv").config();
+const cors = require("cors");
 const express = require("express");
 const connectDB = require("./config/db");
 const userRoutes = require("./routes/userRoutes");
@@ -6,6 +7,8 @@ const resourceRoutes = require("./routes/resourceRoutes");
 const connectionRoutes = require("./routes/connectionRoutes");
 
 const app = express();
+
+app.use(cors());
 
 app.use(express.json())
 
@@ -17,11 +20,7 @@ app.get("/", (req, res) => {
     res.send("SkillSwap API is running");
 });
 connectDB();
-app.post("/test", (req, res) => {
-    console.log(req.body);
 
-    res.send(req)
-});
 
 app.listen(process.env.PORT, () => {
     console.log(`Server running on port ${process.env.PORT}`);

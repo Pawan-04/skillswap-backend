@@ -23,7 +23,7 @@ next()
 
 
 catch(err) {
-        return res.status(401).json({
+        return res.status(403).json({
             success: false,
             message: "Invalid or expired token"
         });

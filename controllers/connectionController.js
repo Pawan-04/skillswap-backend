@@ -125,13 +125,24 @@ const updateConnectionRequest = async (req, res) => {
             });
         }
 
-        connection.status = status;
+        // If request is rejected, remove it completely
+        if (status === "rejected") {
+            await Connection.findByIdAndDelete(req.params.id);
+
+            return res.status(200).json({
+                success: true,
+                message: "Connection request rejected"
+            });
+        }
+
+        // If request is accepted
+        connection.status = "accepted";
 
         await connection.save();
 
-        res.status(200).json({
+        return res.status(200).json({
             success: true,
-            message: `Connection request ${status}`,
+            message: "Connection request accepted",
             connection
         });
 

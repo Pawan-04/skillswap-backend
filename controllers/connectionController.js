@@ -2,69 +2,69 @@ const Connection = require("../models/Connection");
 const User = require("../models/User");
 
 const sendConnectionRequest = async (req, res) => {
-try{
+    try {
         const senderId = req.user.userId;
-    const receiverId = req.params.userId;
+        const receiverId = req.params.userId;
 
-    if (senderId === receiverId) {
-    return res.status(400).json({
-        success: false,
-        message: "You cannot send a connection request to yourself"
-    });
-}
+        if (senderId === receiverId) {
+            return res.status(400).json({
+                success: false,
+                message: "You cannot send a connection request to yourself"
+            });
+        }
 
-    const receiver = await User.findById(receiverId);
+        const receiver = await User.findById(receiverId);
 
 
-if (!receiver) {
-    return res.status(404).json({
-        success: false,
-        message: "User not found"
-    });
-    }
+        if (!receiver) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            });
+        }
 
-//     const existingConnection = await Connection.findOne({
-//     sender: senderId,
-//     receiver: receiverId
-// });
- const existingConnection = await Connection.findOne({
-    $or: [
-        {
+        //     const existingConnection = await Connection.findOne({
+        //     sender: senderId,
+        //     receiver: receiverId
+        // });
+        const existingConnection = await Connection.findOne({
+            $or: [
+                {
+                    sender: senderId,
+                    receiver: receiverId
+                },
+                {
+                    sender: receiverId,
+                    receiver: senderId
+                }
+            ]
+        });
+
+        if (existingConnection) {
+            return res.status(400).json({
+                success: false,
+                message: "Connection request already exists"
+            });
+        }
+
+        const connection = await Connection.create({
             sender: senderId,
             receiver: receiverId
-        },
-        {
-            sender: receiverId,
-            receiver: senderId
-        }
-    ]
-});
+        });
 
-if (existingConnection) {
-    return res.status(400).json({
-        success: false,
-        message: "Connection request already exists"
-    });
-}
+        res.status(201).json({
+            success: true,
+            message: "Connection request sent",
+            connection
+        });
+    }
 
-const connection = await Connection.create({
-    sender: senderId,
-    receiver: receiverId
-});
-
-res.status(201).json({
-    success: true,
-    message: "Connection request sent",
-    connection
-});
-}
-
-catch(err){
-    return res.status(500).json({
-        success:false,
-        message:"Bad request"
-    })
-}
+    catch (err) {
+        return res.status(500).json({
+            success: false,
+            message: "Bad request"
+        })
+    }
 
 };
 
@@ -181,9 +181,36 @@ const getMyConnections = async (req, res) => {
     }
 };
 
+const removeConnection = async (req, res) => {
+    try {
+        const requester = req.user.userId
+        const removingId = req.params.id;
+        const deleteUser = await Connection.findOneAndDelete({
+            status: "accepted",
+            $or: [{
+                sender: requester,
+                receiver: removingId
+            },
+            {
+                receiver: requester,
+                sender: removingId
+            }]
+        })
+
+        res.status(201).json({
+            message:"deletion succesful",
+            deletedUser
+        })
+    }
+    catch (err) {
+        console.log(err)
+    }
+}
+
 module.exports = {
     sendConnectionRequest,
     getConnectionRequests,
     updateConnectionRequest,
-    getMyConnections
+    getMyConnections,
+    removeConnection
 };

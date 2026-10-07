@@ -1,5 +1,5 @@
 const express = require("express");
-const {sendConnectionRequest, getConnectionRequests, updateConnectionRequest, getMyConnections} = require("../controllers/connectionController");
+const {sendConnectionRequest, getConnectionRequests, updateConnectionRequest, getMyConnections,removeConnection} = require("../controllers/connectionController");
 
 const protect = require("../middleware/authMiddleware");
 
@@ -9,5 +9,6 @@ router.post("/:userId", protect, sendConnectionRequest);
 router.get("/requests", protect, getConnectionRequests);
 router.patch("/:id", protect, updateConnectionRequest);
 router.get("/", protect, getMyConnections);
+router.delete("/:id", protect, removeConnection);
 
 module.exports = router;

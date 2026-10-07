@@ -1,4 +1,5 @@
 const User = require("../models/User");
+const Connection = require('../models/Connection')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 
@@ -59,9 +60,9 @@ const loginUser = async (req, res) => {
         //jwt.sign(payload, secret, options)
 
         const token = jwt.sign(
-        { userId: user._id },
-        process.env.JWT_SECRET,
-        { expiresIn: "1d" }
+            { userId: user._id },
+            process.env.JWT_SECRET,
+            { expiresIn: "1d" }
         );
 
         res.status(200).json({
@@ -89,75 +90,75 @@ const getCurrentUser = async (req, res) => {
     const user = await User.findById(req.user.userId);
 
     if (!user) {
-    return res.status(404).json({
-        success: false,
-        message: "User not found"
+        return res.status(404).json({
+            success: false,
+            message: "User not found"
+        });
+    }
+
+    user.password = undefined;
+
+    res.status(200).json({
+        success: true,
+        user
     });
-}
-
-user.password = undefined;
-
-res.status(200).json({
-    success: true,
-    user
-});
 
 };
 
 
-const updateProfile = async(req,res)=>{
+const updateProfile = async (req, res) => {
     // console.log(req.body)
     // console.log(req.user)
     const { name, bio, avatar, skillsToTeach, skillsToLearn } = req.body
 
     if (name !== undefined && name.trim() === "") {
-    return res.status(400).json({
-        success: false,
-        message: "Name cannot be empty"
-    });
-}
+        return res.status(400).json({
+            success: false,
+            message: "Name cannot be empty"
+        });
+    }
 
     if (skillsToTeach !== undefined && !Array.isArray(skillsToTeach)) {
-    return res.status(400).json({
-        success: false,
-        message: "skillsToTeach must be an array"
-    });
-}
+        return res.status(400).json({
+            success: false,
+            message: "skillsToTeach must be an array"
+        });
+    }
 
-if (skillsToLearn !== undefined && !Array.isArray(skillsToLearn)) {
-    return res.status(400).json({
-        success: false,
-        message: "skillsToLearn must be an array"
-    });
-}
+    if (skillsToLearn !== undefined && !Array.isArray(skillsToLearn)) {
+        return res.status(400).json({
+            success: false,
+            message: "skillsToLearn must be an array"
+        });
+    }
 
     const updatedUser = await User.findByIdAndUpdate(req.user.userId,
         {
-            $set:{
+            $set: {
                 name,
                 bio,
                 avatar,
-                skillsToTeach, 
-                skillsToLearn 
+                skillsToTeach,
+                skillsToLearn
 
             }
         }, { returnDocument: "after" }
     )
 
     if (!updatedUser) {
-    return res.status(404).json({
-        success: false,
-        message: "User not found"
-    });
-}
+        return res.status(404).json({
+            success: false,
+            message: "User not found"
+        });
+    }
 
     updatedUser.password = undefined;
 
     res.status(200).json({
-    success: true,
-    message: "Profile updated successfully",
-    user: updatedUser
-});
+        success: true,
+        message: "Profile updated successfully",
+        user: updatedUser
+    });
 
 }
 
@@ -205,11 +206,43 @@ const getUserById = async (req, res) => {
     }
 };
 
+
+const discoverUsers = async (req, res) => {
+    try {
+
+        const connectedUsers = await Connection.find({ status: "accepted" })
+    
+        const excludeUsersId = connectedUsers.flatMap(connection => [connection.sender,connection.receiver])
+
+        excludeUsersId.push(req.user.userId)
+        console.log(excludeUsersId)
+
+        const users = await User.find(  {   _id:{$nin:excludeUsersId} }   ).select("-password")
+
+        // const users = await User.find({
+        //     _id: { $ne: req.user.userId }    //$ne = not equal
+        // }).select("-password");
+
+        res.status(200).json({
+            success: true,
+            users,
+        });
+    } catch (error) {
+        console.log(error)
+        res.status(420).json({
+            success: false,
+            message: "Failed to fetch users",
+            
+        });
+    }
+};
+
 module.exports = {
     createUser,
     loginUser,
     getCurrentUser,
     updateProfile,
     getAllUsers,
-    getUserById
+    getUserById,
+    discoverUsers
 };

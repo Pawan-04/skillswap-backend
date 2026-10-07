@@ -6,7 +6,8 @@ const {
     getCurrentUser,
     updateProfile,
     getAllUsers,
-    getUserById
+    getUserById,
+    discoverUsers
 } = require("../controllers/userController");
 const protect = require('../middleware/authMiddleware')
 
@@ -19,6 +20,7 @@ router.patch("/me", protect, updateProfile);
 router.get("/:id", protect, getUserById);
 
 router.get('/',protect,getAllUsers)
+router.get('/discover/list',protect,discoverUsers)
 
 
 
